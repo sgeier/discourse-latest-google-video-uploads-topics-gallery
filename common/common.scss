@@ -1,0 +1,41 @@
+.topics-grid-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  grid-gap: 1rem;
+  margin-bottom: 30px;
+  .topics-grid-item {
+	display: flex;
+	flex-direction: column;
+  }
+  .topic-link {
+	display: block;
+	width: 100%;
+  }
+  .topic-thumb {
+	width: 100%;
+	display: block;
+	height: 150px;
+	border-radius: 10px;
+	overflow: hidden;
+
+	img {
+	  object-fit: cover;
+	  height: 100%;
+	  width: 100%;
+	}
+  }
+  .topic-meta {
+	position: relative;
+	padding: 8px;
+	.topic-title {
+	  display: inline-block;
+	  width: 80%;
+	}
+	.topic-date {
+	  display: inline-block;
+	  position: absolute;
+	  top: 8px;
+	  right: 0;
+	}
+  }
+}

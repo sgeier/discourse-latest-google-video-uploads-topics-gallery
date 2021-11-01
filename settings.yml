@@ -1,0 +1,8 @@
+teaser_grid_enabled:
+  default: true
+  description: "Enable Teaser Grid"
+teaser_grid_gdrive_client_id:
+  default: ''
+  description: "Gdrive Client Id"
+
+

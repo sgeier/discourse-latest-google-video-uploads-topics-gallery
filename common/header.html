@@ -1,0 +1,182 @@
+<script type="text/discourse-plugin" version="0.8">
+	const ajax = require('discourse/lib/ajax').ajax;
+	const Topic = require('discourse/models/topic').default;
+	const Post = require('discourse/models/post').default;
+	const relativeAge = require('discourse/lib/formatter').relativeAge
+	const video_pattern = 'https://drive.google.com/file/d/';
+	const gDriveScopes = ["https://www.googleapis.com/auth/drive"];
+	const used_topics = [];
+	let accessToken;
+
+
+	gapi.load("client:auth2", function () {
+		gapi.client.init({
+			clientId: settings.teaser_grid_gdrive_client_id,
+			scope: gDriveScopes.join(" ")
+		}).then(function () {
+			if (!(gapi.auth2.getAuthInstance().isSignedIn.get() && checkScope())) {
+				gapi.auth2.getAuthInstance().signIn().then(checkScope);
+			}
+		});
+	});
+
+	const getFirstMediaFromPost = async (post) => {
+		const request = {
+			method: "GET",
+			headers: new Headers({
+				Authorization:
+						"Bearer " + accessToken
+			})
+		};
+
+		//apollo://https://drive.google.com/file/d/191Adx9rdcWOxqEVmT4jCFyveSt0l2Umg/view?usp=sharing
+		// Scan cooked html for google video id.
+		if (post.cooked.indexOf(video_pattern) !== -1) {
+
+			var matches = post.cooked.match(/[moon://https://drive.google.com/file\/d\/]([a-zA-Z0-9\-\_]{33})/);
+			const videoId = matches[1];
+
+			//"<div><a href="moon://https://drive.google.com/file/d/1f0j35JkonZge6T_hcfh-j8SIUrmMC-hs/view?usp=sharing" target="_blank" rel="noopener">Open Video</a></div>"
+
+			const thumb = await fetch(
+					`https://www.googleapis.com/drive/v3/files/${videoId}?supportsAllDrives=true&fields=*`,
+					request
+			)
+					.then((response) => response.json())
+					.then((data) => {
+						if (data.hasThumbnail) {
+							return data.thumbnailLink;
+						} else {
+							return "https://via.placeholder.com/150"
+						}
+					});
+			return thumb;
+		} else {
+			return null;
+		}
+	};
+
+	const checkScope = function () {
+		console.log('checking scope.')
+		const authResponse = gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse();
+		if (authResponse.scope.indexOf(gDriveScopes[0]) >= 0) {
+			accessToken = authResponse.access_token;
+			console.log('Teaser Grid init with with GAPI.');
+			return true;
+		} else {
+			console.log('Teaser Grid: Scope not authorized..')
+		}
+		return false;
+	};
+
+	console.log(settings.teaser_grid_gdrive_client_id);
+	api.registerConnectorClass('above-main-container', 'featured-topics', {
+		// above-main-container is the plugin outlet,
+		// featured-topics is your custom component name
+
+		setupComponent(args, component) {
+			const model = args.model;
+
+			api.onPageChange((url, title) => {
+				if ((url == "/") || (url == "/latest")) {
+					// on page change, check if url matches
+					// if your homepage isn't /latest change this to /categories
+
+					$('html').addClass('custom-featured-topics');
+					// add a class to the HTML tag for easy CSS targetting
+
+					component.set('displayfeaturedTopics', true);
+					// we'll use this later to show our template
+
+					component.set("loadingTopics", true);
+					// helps us show a loading spinner until topics are ready
+
+					ajax("/posts.json").then(async function (result) {
+
+						let featuredTopics = [];
+						// Create an empty array, we'll push topics into it
+						const limit = 10;
+						const posts = result.latest_posts.slice(0, limit + 1);
+
+						console.log(posts);
+						for (const post of posts) {
+
+							if (used_topics.includes(post.topic_id)) {
+								continue;
+							}
+
+							if(post.cooked) {
+								const thumb = await getFirstMediaFromPost(post)
+								if(!thumb) continue;
+								post.thumbnail = thumb;
+								post.url = `/t/${post.topic_slug}/${post.topic_id}`
+								post.relativeAge = relativeAge(new Date(post.created_at))
+								used_topics.push(post.topic_id);
+								featuredTopics.push(Post.create(post));
+							}
+							component.set('featuredTopics', featuredTopics);
+						}
+
+						component.set("loadingTopics", false);
+
+					})
+				} else {
+					$('html').removeClass('custom-featured-topics');
+					// Remove our custom class
+
+					component.set('displayfeaturedTopics', false);
+					// Don't display our customization
+
+
+				}
+			});
+		}
+	});
+</script>
+
+<script type="text/discourse-plugin" version="0.8">
+	const h = require("virtual-dom").h;
+
+	api.createWidget("teaser-grid", {
+		tagName: "div.teaser-grid",
+
+		html() {
+			return h('h1', "Hello World!");
+		}
+	});
+</script>
+
+
+<script
+		type="text/x-handlebars"
+		data-template-name="/connectors/above-main-container/featured-topics"
+>
+
+	{{#if displayfeaturedTopics}}
+		<!-- If our component is true, show this content: -->
+
+		<div class="custom-topics-grid-wrapper">
+			{{conditional-loading-spinner condition=loadingTopics}}
+			<!-- Show a loading spinner if topics are loading -->
+
+			{{#unless loadingTopics}}
+				<div class="topics-grid-list">
+				{{#each featuredTopics as |topic|}}
+					<div class="topics-grid-item">
+						<a href="{{topic.url}}" class="topic-link">
+							<span class="topic-thumb">
+								<img src="{{topic.thumbnail}}" />
+							</span>
+
+						</a>
+						<span class="topic-meta">
+								<span class="topic-title">{{topic.topic_title}}</span>
+								<span class="topic-date">{{topic.relativeAge}}</span>
+							</span>
+					</div>
+				{{/each}}
+				</div>
+			{{/unless}}
+		</div>
+	{{/if}}
+</script>
