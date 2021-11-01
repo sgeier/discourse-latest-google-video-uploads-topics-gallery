@@ -110,7 +110,7 @@
 								const thumb = await getFirstMediaFromPost(post)
 								if(!thumb) continue;
 								post.thumbnail = thumb;
-								post.url = `/t/${post.topic_slug}/${post.topic_id}`
+								post.url = `/t/${post.topic_slug}/${post.topic_id}/${post.post_number}`
 								post.relativeAge = relativeAge(new Date(post.created_at))
 								used_topics.push(post.topic_id);
 								featuredTopics.push(Post.create(post));
@@ -182,3 +182,14 @@
 		</div>
 	{{/if}}
 </script>
+It starts!  If you haven't seen my Enemy Wizard post you can skip to 4:30 in the following video to see the basic bat stuff working.
+
+<div><a href="moon://https://drive.google.com/file/d/16x290N_H1_aScll-UGv9LNv_500ocENa/view?usp=sharing" target="_blank">Open Video</a></div>
+
+I was adding look at to the boss and it's becoming very clear that feet sliding is a huge issue. You can see it in the video below as well.
+
+<div><a href="moon://https://drive.google.com/file/d/136w7qy5PdOp-5vppVoYag5baSQwPAt3O/view?usp=sharing" target="_blank">Open Video</a></div>
+
+The only thing I can think of is doing some kind of IK feet solution that let's us plant and unplant feet during an animation so that we can still rotate the boss towards the target without having him ice skate all over the show.
+
+@GennadiyKorol @thomasmahler So the next question is when are we likely to research and solve this issue? Will there be tech resources available to look into it soon? Can we pause boss progress on the tech side so that I can look into it? Should we just ignore it until someone is able to look into it later? Personally I'd prefer not to leave it because the bat boss looks really crap with this issue, more than other enemies/bosses since it has so many feet. Getting a feel for how it should move is tough without the ability to see how far we can rotate before planted feet look bad and any other restrictions that come from this are unknown. Would be good to get your thoughts on this matter.
