@@ -33,7 +33,7 @@
 		// Scan cooked html for google video id.
 		if (post.cooked.indexOf(video_pattern) !== -1) {
 
-			var matches = post.cooked.match(/[moon://https://drive.google.com/file\/d\/]([a-zA-Z0-9\-\_]{33})(?!moon:)/);
+			var matches = post.cooked.match(/[moon://https://drive.google.com/file\/d\/]([a-zA-Z0-9\-\_]{33}(?!moon:\/\/))/);
 			const videoId = matches[1];
 
 			//"<div><a href="moon://https://drive.google.com/file/d/1f0j35JkonZge6T_hcfh-j8SIUrmMC-hs/view?usp=sharing" target="_blank" rel="noopener">Open Video</a></div>"
