@@ -95,8 +95,9 @@
 
 						let featuredTopics = [];
 						// Create an empty array, we'll push topics into it
-						const limit = 10;
-						const posts = result.latest_posts.slice(0, limit + 1);
+						//const limit = 10;
+						//const posts = result.latest_posts.slice(0, limit + 1);
+						const posts = result.latest_posts;
 
 						console.log(posts);
 						for (const post of posts) {
@@ -113,6 +114,7 @@
 								post.relativeAge = relativeAge(new Date(post.created_at))
 								used_topics.push(post.topic_id);
 								featuredTopics.push(Post.create(post));
+								if(featuredTopics.length === 5) break;
 							}
 							component.set('featuredTopics', featuredTopics);
 						}
